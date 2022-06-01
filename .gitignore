@@ -177,3 +177,7 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+.nextflow
+null
+*.log*
+work
