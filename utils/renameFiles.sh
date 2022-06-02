@@ -13,5 +13,5 @@ done
 cd $dir
 while IFS="," read -r rec1 rec2
 do
-  mv $rec1 $rec2
+    mv $rec1 $rec2
 done < <(cut -f11,12 $metadata)
