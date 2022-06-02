@@ -12,7 +12,7 @@ do
     esac
 done
 
-echo "Converting BAM to SAM"
+echo "bam2sam.sh: STARTED"
 bam_to_sam(){
     ACC_NO=${f%%.*}
     ACC_NO=${ACC_NO##*/}
@@ -26,4 +26,4 @@ do
 done
 wait
 
-echo "Finished converting BAM to SAM"
+echo "bam2sam.sh: DONE"

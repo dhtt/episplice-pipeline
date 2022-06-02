@@ -180,5 +180,7 @@ rsconnect/
 .nextflow
 null
 *.log*
+*.bam*
+*.sam*
 work
 results
