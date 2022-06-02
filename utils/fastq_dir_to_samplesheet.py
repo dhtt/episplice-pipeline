@@ -8,11 +8,12 @@ import argparse
 
 def parse_args(args=None):
     Description = "Generate nf-core/rnaseq samplesheet from a directory of FastQ files."
-    Epilog = "Example usage: python fastq_dir_to_samplesheet.py <FASTQ_DIR> <SAMPLESHEET_FILE>"
+    Epilog = "Example usage: python fastq_dir_to_samplesheet.py <FASTQ_DIR> <SAMPLESHEET_FILE> <ANALYSIS_TYPE>"
 
     parser = argparse.ArgumentParser(description=Description, epilog=Epilog)
     parser.add_argument("FASTQ_DIR", help="Folder containing raw FastQ files.")
     parser.add_argument("SAMPLESHEET_FILE", help="Output samplesheet file.")
+    parser.add_argument("ANALYSIS_TYPE", help="Type of analysis: mRNA_seq or ChIP-seq.")
     parser.add_argument(
         "-st",
         "--strandedness",
@@ -67,12 +68,45 @@ def parse_args(args=None):
         default=1,
         help="After splitting FastQ file name by --sanitise_name_delimiter all elements before this index (1-based) will be joined to create final sample name.",
     )
+    parser.add_argument(
+        "-ctl",
+        "--control_id",
+        type=str,
+        dest="CHIPSEQ_CONTROL_ID",
+        default="CTL",
+        help="ID to identify control samples",
+    )
+    parser.add_argument(
+        "-ab",
+        "--antibody",
+        type=int,
+        dest="ANTIBODY_INDEX",
+        default=2,
+        help="Index of antibody in the file name after splitting FastQ file name",
+    )
+    parser.add_argument(
+        "-ri",
+        "--replicate_index",
+        type=int,
+        dest="REPLICATE_INDEX",
+        default=1,
+        help="After splitting FastQ file name by --sanitise_name_delimiter all elements before this index (1-based) will be joined to create final sample name.",
+    )
+    parser.add_argument(
+        "-gi",
+        "--group_name_index",
+        type=str,
+        dest="GROUP_NAME_INDEX",
+        default="0",
+        help="After splitting FastQ file name by --sanitise_name_delimiter all elements before this index (1-based) will be joined to create final sample name.",
+    )
     return parser.parse_args(args)
 
 
 def fastq_dir_to_samplesheet(
     fastq_dir,
     samplesheet_file,
+    analysis_type,
     strandedness="unstranded",
     read1_extension="_R1_001.fastq.gz",
     read2_extension="_R2_001.fastq.gz",
@@ -80,6 +114,10 @@ def fastq_dir_to_samplesheet(
     sanitise_name=False,
     sanitise_name_delimiter="_",
     sanitise_name_index=1,
+    control_id="CTL",
+    antibody_index=2,
+    replicate_index=3,
+    group_name_index="0",
 ):
     def sanitize_sample(path, extension):
         """Retrieve sample id from filename"""
@@ -125,15 +163,31 @@ def fastq_dir_to_samplesheet(
             os.makedirs(out_dir)
 
         with open(samplesheet_file, "w") as fout:
-            header = ["sample", "fastq_1", "fastq_2", "strandedness"]
-            fout.write(",".join(header) + "\n")
-            for sample, reads in sorted(read_dict.items()):
-                for idx, read_1 in enumerate(reads["R1"]):
-                    read_2 = ""
-                    if idx < len(reads["R2"]):
-                        read_2 = reads["R2"][idx]
-                    sample_info = ",".join([sample, read_1, read_2, strandedness])
-                    fout.write(f"{sample_info}\n")
+            if analysis_type=="chipseq":
+                header = ["group","replicate", "fastq_1", "fastq_2", "antibody", "control"]
+                fout.write(",".join(header) + "\n")
+                for sample, reads in sorted(read_dict.items()):
+                    id = sample.split('_')
+                    group = '_'.join([id[int(x)] for x in group_name_index.split(',')])
+                    replicate = id[replicate_index].strip('rep')
+                    antibody = id[antibody_index]
+                    control = control_id + "_" + antibody if group!=control_id else ""
+                    for idx, read_1 in enumerate(reads["R1"]):
+                        read_2 = ""
+                        if idx < len(reads["R2"]):
+                            read_2 = reads["R2"][idx]
+                        sample_info = ",".join([group, replicate, read_1, read_2, antibody, control])
+                        fout.write(f"{sample_info}\n")
+            elif analysis_type=="rnaseq":
+                header = ["sample", "fastq_1", "fastq_2", "strandedness"]
+                fout.write(",".join(header) + "\n")
+                for sample, reads in sorted(read_dict.items()):
+                    for idx, read_1 in enumerate(reads["R1"]):
+                        read_2 = ""
+                        if idx < len(reads["R2"]):
+                            read_2 = reads["R2"][idx]
+                        sample_info = ",".join([sample, read_1, read_2, strandedness])
+                        fout.write(f"{sample_info}\n")
     else:
         error_str = (
             "\nWARNING: No FastQ files found so samplesheet has not been created!\n\n"
@@ -156,6 +210,7 @@ def main(args=None):
     fastq_dir_to_samplesheet(
         fastq_dir=args.FASTQ_DIR,
         samplesheet_file=args.SAMPLESHEET_FILE,
+        analysis_type=args.ANALYSIS_TYPE,
         strandedness=strandedness,
         read1_extension=args.READ1_EXTENSION,
         read2_extension=args.READ2_EXTENSION,
@@ -163,6 +218,10 @@ def main(args=None):
         sanitise_name=args.SANITISE_NAME,
         sanitise_name_delimiter=args.SANITISE_NAME_DELIMITER,
         sanitise_name_index=args.SANITISE_NAME_INDEX,
+        control_id=args.CHIPSEQ_CONTROL_ID,
+        antibody_index=args.ANTIBODY_INDEX,
+        replicate_index=args.REPLICATE_INDEX,
+        group_name_index=args.GROUP_NAME_INDEX,
     )
 
 
