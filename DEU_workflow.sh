@@ -10,11 +10,12 @@ do
     esac
 done
 
-fastq_PATH=$rnaseq_PATH/fastq_files;
+fastq_PATH=$rnaseq_PATH/fastq_files; #Files in fastq_PATH must follow naming format celltype_condition_repx_read.fastq.gz
 rnaseq_OUTPUT=$rnaseq_PATH'/rnaseq_output';
+refgen_PATH=$ENCODE_REFGEN/reference_genome.2021_.corrected.gtf
 SAMPLESHEET=$fastq_PATH'/samplesheet.csv';
-SAM_PATH=$rnaseq_PATH/'SAM_files';
-count_PATH=$rnaseq_PATH/'count_files';
+SAM_PATH=$rnaseq_PATH/'SAM_files'; # File name in count_PATH must be celltype_condition_repx.txt
+count_PATH=$rnaseq_PATH/'count_files'; # File name in count_PATH must be celltype_condition_repx.txt
 echo '========== Initialized DEU workflow =========='
 
 # # Run nf-core/rna_seq
@@ -31,8 +32,12 @@ echo '========== Initialized DEU workflow =========='
 # mkdir -p $SAM_PATH
 # utils/bam2sam.sh -i $rnaseq_OUTPUT'/star_salmon' -o $SAM_PATH
 
-echo 'Generate exon count'
+# echo 'Generate exon count'
 # mkdir -p $count_PATH
-DEU_scripts/generate_exon_count.sh -i $SAM_PATH -o $count_PATH -g $ENCODE_REFGEN/reference_genome.2021_.corrected.gtf
+# DEU_scripts/generate_exon_count.sh -i $SAM_PATH -o $count_PATH -g $refgen_PATH
+# echo '========== Generated exon counts =========='
 
+# DEXSeq run
+echo 'Start DEXseq analysis'
+Rscript DEU_scripts/DEXSeq_analysis.R -f $count_PATH -a MCF7_DMSO -b MCF7_50nM -g $refgen_PATH -n 8
 echo '========== Generated exon counts =========='
