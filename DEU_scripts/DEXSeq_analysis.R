@@ -9,23 +9,23 @@ library("BiocParallel")
 
 option_list <- list(
   make_option(c("-i", "--countfolder"),
-    type = "character", default = NULL,
+    type = "character", default = default_countfolder,
     help = "path to folder of counts", metavar = "character"
   ),
-  make_option(c("-o", "--resultfolder"),
-    type = "character", default = NULL,
+  make_option(c("-o", "--default_dexseqfolder"),
+    type = "character", default = default_dexseqfolder,
     help = "path to folder of result", metavar = "character"
   ),
   make_option(c("-a", "--epigenome1"),
-    type = "character", default = NULL,
+    type = "character", default = default_epigenome1,
     help = "ID of first epigenome", metavar = "character"
   ),
   make_option(c("-b", "--epigenome2"),
-    type = "character", default = NULL,
+    type = "character", default = default_epigenome2,
     help = "ID of second epigenome", metavar = "character"
   ),
   make_option(c("-g", "--referencegenome"),
-    type = "character", default = NULL,
+    type = "character", default = default_referencegenome,
     help = "path to flattened reference genome", metavar = "character"
   ),
   make_option(c("-n", "--numcores"),
@@ -88,13 +88,11 @@ colnames(dxd_count) <- c(
   paste(file_names$V1, file_names$V2, sep = "_")
 )
 normedcount_path <- paste(
-  opt$resultfolder,
-  paste(
-    paste(
-      epi_id1, epi_id2, sep = "_"),
-      "normedcount.csv", sep = "_"),
-      sep = "/"
-      )
+  opt$default_dexseqfolder,
+  "csv",
+  paste(epi_id1, epi_id2, "normedcount.csv", sep = "_"),
+  sep = "/"
+  )
 write.table(
   dxd_count, normedcount_path,
   quote = FALSE, sep = "\t", dec = ".", row.names = FALSE, col.names = TRUE
@@ -102,29 +100,28 @@ write.table(
 
 print("Saving DEXSeq result")
 r_data_path <- paste(
-  opt$resultfolder,
-  paste(
-    paste(epi_id1, epi_id2, sep = "_"),
-    "RData", sep = "."),
-    sep = "/"
-    )
+  opt$default_dexseqfolder,
+  "RData",
+  paste(paste(epi_id1, epi_id2, sep = "_"), "RData", sep = "."),
+  sep = "/"
+  )
 save(dxd_res, file = r_data_path)
 
 result_path <- paste(
-  opt$resultfolder,
-  paste(
-    paste(epi_id1, epi_id2, sep = "_"),
-    "res.csv", sep = "_"),
-    sep = "/"
-    )
+  opt$default_dexseqfolder,
+  "csv",
+  paste(epi_id1, epi_id2, "res.csv", sep = "_"),
+  sep = "/"
+  )
 write.table(as.data.frame(dxd_res[c(1, 2, 3, 5, 6, 7, 10)]), result_path,
   quote = FALSE, sep = "\t", dec = ".", row.names = FALSE, col.names = TRUE
 )
 
 print("---> Exporting HTML DEXSeq result")
 html_path <- paste(
-  opt$resultfolder,
-  paste(paste(epi_id1, epi_id2, sep = "_"), "html", sep = "_"),
+  opt$default_dexseqfolder,
+  "html",
+  paste(epi_id1, epi_id2, "html", sep = "_"),
   sep = "/"
   )
 DEXSeqHTML(dxd_res,

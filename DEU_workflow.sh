@@ -16,6 +16,7 @@ refgen_PATH=$ENCODE_REFGEN/reference_genome.2021_.corrected.gtf
 SAMPLESHEET=$fastq_PATH'/samplesheet.csv';
 SAM_PATH=$rnaseq_PATH/'SAM_files'; # File name in count_PATH must be celltype_condition_repx.txt
 count_PATH=$rnaseq_PATH/'count_files'; # File name in count_PATH must be celltype_condition_repx.txt
+DEXSeq_output_PATH=$rnaseq_PATH'/DEXSeq_output'
 echo '========== Initialized DEU workflow =========='
 
 # # Run nf-core/rna_seq
@@ -39,5 +40,6 @@ echo '========== Initialized DEU workflow =========='
 
 # DEXSeq run
 echo 'Start DEXseq analysis'
+mkdir -p $DEXSeq_output_PATH $DEXSeq_output_PATH/csv $DEXSeq_output_PATH/html $DEXSeq_output_PATH/RDS
 Rscript DEU_scripts/DEXSeq_analysis.R -f $count_PATH -a MCF7_DMSO -b MCF7_50nM -g $refgen_PATH -n 8
 echo '========== Generated exon counts =========='
