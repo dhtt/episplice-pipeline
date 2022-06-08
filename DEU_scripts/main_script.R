@@ -8,7 +8,7 @@ default_dexseqfolder <- paste(
 default_epigenome1 <- "MCF7_DMSO"
 default_epigenome2 <- "MCF7_50nM"
 default_referencegenome <- "/home/dhthutrang/ENCODE/refgen/reference_genome.2021_.corrected.gtf"
-source("/home/dhthutrang/Krebs/episplice-pipeline/DEU_scripts/DEXSeq_analysis.R")
+# source("/home/dhthutrang/Krebs/episplice-pipeline/DEU_scripts/DEXSeq_analysis.R")
 
 # DEXSeq_analysis 2 ####
 
