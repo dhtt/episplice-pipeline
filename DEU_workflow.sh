@@ -40,6 +40,6 @@ echo '========== Initialized DEU workflow =========='
 
 # DEXSeq run
 echo 'Start DEXseq analysis'
-mkdir -p $DEXSeq_output_PATH $DEXSeq_output_PATH/csv $DEXSeq_output_PATH/html $DEXSeq_output_PATH/RDS
-Rscript DEU_scripts/DEXSeq_analysis.R -f $count_PATH -a MCF7_DMSO -b MCF7_50nM -g $refgen_PATH -n 8
+mkdir -p $DEXSeq_output_PATH $DEXSeq_output_PATH/csv $DEXSeq_output_PATH/html $DEXSeq_output_PATH/r_data $DEXSeq_output_PATH/plot
+Rscript DEU_scripts/DEXSeq_analysis.R -f $count_PATH -a MCF7_DMSO -b MCF7_50nM -G $refgen_PATH -n 8
 echo '========== Generated exon counts =========='
