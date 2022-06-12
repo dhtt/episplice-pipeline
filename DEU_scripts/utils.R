@@ -1,7 +1,8 @@
-library(data.table, quietly = TRUE)
-library(dplyr, quietly = TRUE)
-library(ggplot2, quietly = TRUE)
-library(reshape2, quietly = TRUE)
+library("data.table", quietly = TRUE)
+library("dplyr", quietly = TRUE)
+library("ggplot2", quietly = TRUE)
+library("reshape2", quietly = TRUE)
+library("DEXSeq", quietly = TRUE)
 
 library("optparse", quietly = TRUE)
 library("BiocParallel")
@@ -26,13 +27,17 @@ option_list <- list(
         type = "character", default = default_epigenome2,
         help = "ID of second epigenome", metavar = "character"
     ),
-    make_option(c("-g", "--referencegenome"),
+    make_option(c("-G", "--referencegenome"),
         type = "character", default = default_referencegenome,
         help = "path to flattened reference genome", metavar = "character"
     ),
     make_option(c("-n", "--numcores"),
         type = "integer", default = 1,
         help = "number of processing cores", metavar = "character"
+    ),
+    make_option(c("-g", "--gene_id"),
+        type = "character", default = NULL,
+        help = "chosen gene for plotting", metavar = "character"
     )
 )
 
@@ -41,6 +46,18 @@ opt <- parse_args(opt_parser)
 dexseqfolder <- opt$default_dexseqfolder
 dir.create(file.path(dexseqfolder, "analysis"), showWarnings = FALSE)
 dexseq_analysis_folder <- paste(dexseqfolder, "analysis", sep = "/")
+dexseq_normedcount_path <- paste(dexseqfolder, "csv", sep = "/")
+dexseq_result_path <- paste(dexseqfolder, "csv", sep = "/")
+dexseq_r_data_path <- paste(dexseqfolder, "r_data", sep = "/")
+dexseq_html_path <- paste(dexseqfolder, "html", sep = "/")
+dexseq_plot_path <- paste(dexseqfolder, "plot", sep = "/")
+
+epi_id1 <- opt$epigenome1
+epi_id2 <- opt$epigenome2
+gene_id <- opt$gene_id
+image_height <- opt$height
+image_width <- opt$width
+image_res <- opt$resolution
 
 get_deu_genes <- function(
                           fold_change_index = 7,
@@ -85,5 +102,41 @@ summarize_deu_genes_info <- function(deu_genes_list) {
     paste(names(gene_freq)[gene_freq > 3], collapse = ", ")
 }
 
-deu_genes_list <- get_deu_genes()
-summarize_deu_genes_info()
+get_dexseq_plot <- function(
+                            epi_id1 = epi_id1, epi_id2 = epi_id2,
+                            gene_id = gene_id, image_res = 400,
+                            image_height = 8, image_width = 5) {
+    print("----> Plotting")
+    setwd(dexseq_r_data_path)
+    r_data_filename <- paste(
+        paste(paste(epi_id1, epi_id2, sep = "_"), "*.RData", sep = "."),
+        paste(paste(epi_id2, epi_id1, sep = "_"), "*.RData", sep = "."),
+        sep = "|"
+    )
+    r_data_files <- list.files(
+        normalizePath(getwd()),
+        pattern = r_data_filename, full.names = FALSE
+    )[1]
+    print(r_data_files)
+
+    load(r_data_files)
+    plot_name <- paste(
+        paste(dexseq_plot_path, r_data_files, sep = "/"),
+        gene_id, "tiff",
+        sep = "."
+    )
+    tiff(
+        plot_name,
+        width = image_width, height = image_height,
+        units = "in", res = image_res
+    )
+    plotDEXSeq(
+        dxd.res, gene_id,
+        legend = TRUE, FDR = 0.05,
+        norCounts = TRUE, splicing = TRUE, expression = TRUE,
+        color = c("#EE442F", "#63ACBE"), lwd = 1.8
+    )
+    dev.off()
+    setwd(original_wd)
+    print("----> Finished")
+}
