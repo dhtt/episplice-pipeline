@@ -178,6 +178,9 @@ def fastq_dir_to_samplesheet(
                             read_2 = reads["R2"][idx] 
                             if read_2 == read_1: 
                                 read_2 = ''
+                            if group == control:
+                                antibody = ''
+                                control = ''
                         sample_info = ",".join([group, replicate, read_1, read_2, antibody, control])
                         fout.write(f"{sample_info}\n")
             elif analysis_type=="rnaseq":
@@ -188,6 +191,8 @@ def fastq_dir_to_samplesheet(
                         read_2 = ""
                         if idx < len(reads["R2"]):
                             read_2 = reads["R2"][idx]
+                            if read_2 == read_1: 
+                                read_2 = ''
                         sample_info = ",".join([sample, read_1, read_2, strandedness])
                         fout.write(f"{sample_info}\n")
     else:
