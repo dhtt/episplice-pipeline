@@ -7,6 +7,12 @@ library("DEXSeq", quietly = TRUE)
 library("optparse", quietly = TRUE)
 library("BiocParallel")
 
+default_countfolder <- NA
+default_dexseqfolder <- NA
+default_epigenome1 <- NA
+default_epigenome2 <- NA
+default_referencegenome <- NA
+
 option_list <- list(
   make_option(c("-i", "--countfolder"),
     type = "character", default = default_countfolder,
@@ -35,6 +41,7 @@ option_list <- list(
 )
 
 opt_parser <- OptionParser(option_list = option_list)
+print(opt_parser)
 opt <- parse_args(opt_parser)
 
 # ===== PREPARE DATA =====
@@ -119,7 +126,7 @@ write.table(as.data.frame(dxd.res[c(1, 2, 3, 5, 6, 7, 10)]), result_path,
 
 print("---> Exporting HTML DEXSeq result")
 html_path <- paste(
-  opt$default_dexseqfolder,
+  opt$dexseqfolder,
   "html",
   paste(epi_id1, epi_id2, "html", sep = "_"),
   sep = "/"

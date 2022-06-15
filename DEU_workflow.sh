@@ -23,9 +23,9 @@ echo '========== Initialized DEU workflow =========='
 # echo 'Create output folder'
 # mkdir -p $rnaseq_OUTPUT;
 # echo 'Make sample sheet'
-# python $nfcore_rnaseq/fastq_dir_to_samplesheet.py $fastq_PATH $SAMPLESHEET rnaseq -st unstranded -r1 '_1.fastq.gz' -r2 '_2.fastq.gz';
+# python utils/fastq_dir_to_samplesheet.py $fastq_PATH $SAMPLESHEET rnaseq -st unstranded -r1 '_1.fastq.gz' -r2 '_2.fastq.gz';
 # echo 'Run nf-core/rnaseq'
-# nextflow run nf-core/rnaseq --input $SAMPLESHEET --outdir $rnaseq_OUTPUT --genome GRCh38 -profile docker
+# nextflow run nf-core/rnaseq --input $SAMPLESHEET --outdir $rnaseq_OUTPUT --genome GRCh38 -profile docker --save_reference true 
 # echo '========== Finished nf-core/rnaseq =========='
 
 # # Generate exon counts
@@ -38,8 +38,9 @@ echo '========== Initialized DEU workflow =========='
 # DEU_scripts/generate_exon_count.sh -i $SAM_PATH -o $count_PATH -g $refgen_PATH
 # echo '========== Generated exon counts =========='
 
-# DEXSeq run
-echo 'Start DEXseq analysis'
+# # DEXSeq run
+# echo 'Start DEXseq analysis'
 mkdir -p $DEXSeq_output_PATH $DEXSeq_output_PATH/csv $DEXSeq_output_PATH/html $DEXSeq_output_PATH/r_data $DEXSeq_output_PATH/plot
-Rscript DEU_scripts/DEXSeq_analysis.R -f $count_PATH -a MCF7_DMSO -b MCF7_50nM -G $refgen_PATH -n 8
+# Rscript DEU_scripts/DEXSeq_analysis.R -i $count_PATH -o $DEXSeq_output_PATH -a MCF7_DMSO -b MCF7_50nM -G $refgen_PATH -n 8 #Reddy
+Rscript DEU_scripts/DEXSeq_analysis.R -i $count_PATH -o $DEXSeq_output_PATH -a MCF7_parental -b MCF7_KO -G $refgen_PATH -n 8 #Shen
 echo '========== Generated exon counts =========='

@@ -45,7 +45,7 @@ opt_parser <- OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 dexseqfolder <- opt$default_dexseqfolder
 dir.create(file.path(dexseqfolder, "analysis"), showWarnings = FALSE)
-dexseq_analysis_folder <- paste(dexseqfolder, "analysis", sep = "/")
+dexseq_analysis_path <- paste(dexseqfolder, "analysis", sep = "/")
 dexseq_normedcount_path <- paste(dexseqfolder, "csv", sep = "/")
 dexseq_result_path <- paste(dexseqfolder, "csv", sep = "/")
 dexseq_r_data_path <- paste(dexseqfolder, "r_data", sep = "/")
@@ -59,37 +59,38 @@ image_height <- opt$height
 image_width <- opt$width
 image_res <- opt$resolution
 
-get_deu_genes <- function(
+get_deu_genes <- function( # nolint
                           fold_change_index = 7,
                           fold_change_threshold = 2.0,
                           adj_p_index = 6,
                           adj_p_threshold = 0.0001) {
     print("----> Getting DEU genes")
-    setwd(dexseqfolder)
-    dir_files <- list.files(pattern = "*.csv")
+    setwd(dexseq_result_path)
+    dir_files <- list.files(pattern = "*res.csv")
     deu_genes_list <- vector("list", length(dir_files))
-    for (i in 1:length(dir_files)) {
+    for (i in seq_len(length(dir_files))) {
         print(dir_files[i])
         data <- data.table::data.table(read.csv(dir_files[i], sep = "\t"))
         sig_exon <- data[
             abs(data[[fold_change_index]]) >= fold_change_threshold &
-                data[[adj_p_index]] <= 0.0001,
+                data[[adj_p_index]] <= adj_p_threshold,
         ]
         sig_exon <- sig_exon %>%
-            dplyr::mutate(gene_id = paste(groupID, featureID, sep = ";"))
+            dplyr::mutate(gene_id = paste(groupID, featureID, sep = ";")) # nolint
         deu_genes_list[[i]] <- sig_exon$gene_id
     }
     deu_genes_list <- Reduce(c, deu_genes_list)
+    print(deu_genes_list)
     saveRDS(
         deu_genes_list,
-        paste("analysis", "deu_genes_list.RDS", sep = "/")
+        paste(dexseq_analysis_path, "deu_genes_list.RDS", sep = "/")
     )
     setwd(original_wd)
     print("----> Finished")
     return(deu_genes_list)
 }
 
-summarize_deu_genes_info <- function(deu_genes_list) {
+summarize_deu_genes_info <- function(deu_genes_list, freq = 0) {
     exon_freq <- table(deu_genes_list)
     exon_freq <- exon_freq[order(exon_freq, decreasing = TRUE)]
     gene_freq <- table(
@@ -99,7 +100,7 @@ summarize_deu_genes_info <- function(deu_genes_list) {
         ))
     )
     gene_freq <- gene_freq[order(gene_freq, decreasing = TRUE)]
-    paste(names(gene_freq)[gene_freq > 3], collapse = ", ")
+    paste(names(gene_freq)[gene_freq > freq], collapse = ", ")
 }
 
 get_dexseq_plot <- function(
@@ -107,6 +108,7 @@ get_dexseq_plot <- function(
                             gene_id = gene_id, image_res = 400,
                             image_height = 8, image_width = 5) {
     print("----> Plotting")
+    print(dexseq_r_data_path)
     setwd(dexseq_r_data_path)
     r_data_filename <- paste(
         paste(paste(epi_id1, epi_id2, sep = "_"), "*.RData", sep = "."),
@@ -130,8 +132,8 @@ get_dexseq_plot <- function(
         width = image_width, height = image_height,
         units = "in", res = image_res
     )
-    plotDEXSeq(
-        dxd.res, gene_id,
+    DEXSeq::plotDEXSeq(
+        dxd.res, gene_id, # nolint
         legend = TRUE, FDR = 0.05,
         norCounts = TRUE, splicing = TRUE, expression = TRUE,
         color = c("#EE442F", "#63ACBE"), lwd = 1.8

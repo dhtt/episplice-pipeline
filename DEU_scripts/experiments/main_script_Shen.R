@@ -24,3 +24,4 @@ source("/home/dhthutrang/Krebs/episplice-pipeline/DEU_scripts/utils.R", encoding
 
 library(RCurl)
 x = getURL("https://raw.githubusercontent.com/nf-core/test-datasets/chipseq/design_full.csv")
+x = strsplit(x, split = "\n", fixed = T)[[1]]
