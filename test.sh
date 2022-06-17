@@ -29,5 +29,6 @@ chipseq_PATH=$INPUT_PATH'/ChIP_seq';
 allPaths=( $mrnaseq_PATH $chipseq_PATH )
 checkIfDirExist "${allPaths[@]}"
 
-# ./DEU_workflow.sh -d $rnaseq_PATH
+./DEU_workflow.sh -d $rnaseq_PATH
 ./DHM_workflow.sh -d $chipseq_PATH
+

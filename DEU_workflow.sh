@@ -23,7 +23,8 @@ echo '========== Initialized DEU workflow =========='
 # echo 'Create output folder'
 # mkdir -p $rnaseq_OUTPUT;
 # echo 'Make sample sheet'
-# python utils/fastq_dir_to_samplesheet.py $fastq_PATH $SAMPLESHEET rnaseq -st unstranded -r1 '_1.fastq.gz' -r2 '_2.fastq.gz';
+# # python utils/fastq_dir_to_samplesheet.py $fastq_PATH $SAMPLESHEET rnaseq -st unstranded -r1 '_1.fastq.gz' -r2 '_2.fastq.gz'; #Reddy Shen
+# python utils/fastq_dir_to_samplesheet.py $fastq_PATH $SAMPLESHEET rnaseq -st unstranded -r1 '.fastq.gz' -r2 '.fastq.gz'; #Messier
 # echo 'Run nf-core/rnaseq'
 # nextflow run nf-core/rnaseq --input $SAMPLESHEET --outdir $rnaseq_OUTPUT --genome GRCh38 -profile docker --save_reference true 
 # echo '========== Finished nf-core/rnaseq =========='
@@ -40,7 +41,12 @@ echo '========== Initialized DEU workflow =========='
 
 # # DEXSeq run
 # echo 'Start DEXseq analysis'
-mkdir -p $DEXSeq_output_PATH $DEXSeq_output_PATH/csv $DEXSeq_output_PATH/html $DEXSeq_output_PATH/r_data $DEXSeq_output_PATH/plot
+# mkdir -p $DEXSeq_output_PATH $DEXSeq_output_PATH/csv $DEXSeq_output_PATH/html $DEXSeq_output_PATH/r_data $DEXSeq_output_PATH/plot
 # Rscript DEU_scripts/DEXSeq_analysis.R -i $count_PATH -o $DEXSeq_output_PATH -a MCF7_DMSO -b MCF7_50nM -G $refgen_PATH -n 8 #Reddy
-Rscript DEU_scripts/DEXSeq_analysis.R -i $count_PATH -o $DEXSeq_output_PATH -a MCF7_parental -b MCF7_KO -G $refgen_PATH -n 8 #Shen
+# Rscript DEU_scripts/DEXSeq_analysis.R -i $count_PATH -o $DEXSeq_output_PATH -a MCF7_parental -b MCF7_KO -G $refgen_PATH -n 8 #Shen
+# Rscript DEU_scripts/DEXSeq_analysis.R -i $count_PATH -o $DEXSeq_output_PATH -a MCF7_ctrl -b MCF7_bza_ -G $refgen_PATH -n 8 #Messier
+Rscript DEU_scripts/DEXSeq_analysis.R -i $count_PATH -o $DEXSeq_output_PATH -a MCF7_ctrl -b MCF7_e2_ -G $refgen_PATH -n 8 #Messier
+# Rscript DEU_scripts/DEXSeq_analysis.R -i $count_PATH -o $DEXSeq_output_PATH -a MCF7_ctrl -b MCF7_e2bza -G $refgen_PATH -n 8 #Messier
+Rscript DEU_scripts/DEXSeq_analysis.R -i $count_PATH -o $DEXSeq_output_PATH -a MCF7_ctrl -b MCF7_gc10_ -G $refgen_PATH -n 8 #Messier
+# Rscript DEU_scripts/DEXSeq_analysis.R -i $count_PATH -o $DEXSeq_output_PATH -a MCF7_ctrl -b MCF7_gc10bza -G $refgen_PATH -n 8 #Messier
 echo '========== Generated exon counts =========='
