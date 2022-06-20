@@ -11,9 +11,9 @@ default_referencegenome <- "/home/dhthutrang/ENCODE/refgen/reference_genome.2021
 # source("/home/dhthutrang/Krebs/episplice-pipeline/DEU_scripts/DEXSeq_analysis.R") # nolint
 
 # DEXSeq analysis report ####
-# source("/home/dhthutrang/Krebs/episplice-pipeline/DEU_scripts/utils.R") # nolint
-# deu_genes_list <- get_deu_genes()
-# summarize_deu_genes_info()
+source("/home/dhthutrang/Krebs/episplice-pipeline/DEU_scripts/utils.R") # nolint
+deu_genes_list <- get_deu_genes(adj_p_threshold = 0.05)
+summarize_deu_genes_info(deu_genes_list)
 
 # DEXSeq analysis report ####
 default_epigenome1 <- NULL

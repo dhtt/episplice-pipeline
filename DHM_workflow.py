@@ -125,7 +125,7 @@ def execute_workflow(args=None):
     subprocess.call(
         "nextflow run nf-core/chipseq --input %s --outdir %s --genome %s -profile docker --save_reference true"
         %(samplesheet_path, chipseq_output, genome) +
-        chipseq_options, 
+        " " + chipseq_options, 
         shell=True)
     
     print("========== Finished nf-core/chipseq ==========")
