@@ -31,7 +31,8 @@ def rm_file(file):
         shell=True
         )
 
-def merge_bed_file(input_dir: str, output_dir: str, bed_files: list, merged_bed_name: str):
+def merge_bed_file(input_dir: str, output_dir: str, bed_files: list, merged_bed_name: str, 
+                merge_options="", awk_options="", remove_formats=""):
     # Define input and outname
     merged_bed_file_name = join(output_dir, merged_bed_name + '.bed')
     bed_files = [join(input_dir, s) for s in bed_files]
@@ -45,12 +46,19 @@ def merge_bed_file(input_dir: str, output_dir: str, bed_files: list, merged_bed_
     # Sort bed files by bedtools
     sort_bed_file(merged_bed_file_name)
     subprocess.call(
-        "bedtools merge -c 5 -o max -i %s > %s"
-        %(merged_bed_file_name, merged_bed_file_name + ".merged"),
+        "bedtools merge %s -i %s > %s"
+        %(merge_options, merged_bed_file_name, merged_bed_file_name + ".merged"),
         shell=True
         )
     subprocess.call(
-        "mv %s %s"
-        %(merged_bed_file_name + ".merged", merged_bed_file_name),
+        "awk -v OFS='\t' '{ print %s}' %s > %s"
+        %(awk_options, merged_bed_file_name + ".merged", merged_bed_file_name),
+        shell=True
+        )
+
+    removed_files = ' '.join([output_dir + "/*."+i for i in remove_formats.split(',')])
+    print("Removing file: " + removed_files)
+    subprocess.call(
+        "rm %s" %(removed_files),
         shell=True
         )
