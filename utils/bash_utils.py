@@ -31,6 +31,13 @@ def rm_file(file):
         shell=True
         )
 
+def rename_file(file, new_file):
+    subprocess.call(
+        "mv %s %s" %(file, new_file),
+        shell=True
+        )
+
+
 def merge_bed_file(input_dir: str, output_dir: str, bed_files: list, merged_bed_name: str, 
                 merge_options="", awk_options="", remove_formats=""):
     # Define input and outname
@@ -58,7 +65,37 @@ def merge_bed_file(input_dir: str, output_dir: str, bed_files: list, merged_bed_
 
     removed_files = ' '.join([output_dir + "/*."+i for i in remove_formats.split(',')])
     print("Removing file: " + removed_files)
+    rm_file(removed_files)
+
+def execute_manorm(histone_type, peak_dir, read_dir, control_id, treatment_id, manorm_output_dir):
+    samples = [s for s in listdir(peak_dir) if (histone_type in s)]
+    control_sample = [s for s in samples if (control_id in s)][0]
+    treatment_sample = [s for s in samples if (treatment_id in s)][0]
+    peak_1 = join(peak_dir, control_sample)
+    peak_2 = join(peak_dir, treatment_sample)
+    read_1 = join(read_dir, control_sample)
+    read_2 = join(read_dir, treatment_sample)
+    output_folder = "_".join([histone_type, control_id.split('.')[0], treatment_id.split('.')[0]])
+
+    try:
+        manorm_script = "manorm --p1 " + peak_1 + " --p2 " + peak_2 + " --r1 " + read_1 + " --r2 " + read_2 + " -o " + join(manorm_output_dir, output_folder)
+        subprocess.call(manorm_script, shell=True)
+    except:
+        print("An exception occured while running MAnorm")
+        pass
+
+def intersect_bed_file(refgen_flan_path: str, bed_file: str, intersect_options: str):
     subprocess.call(
-        "rm %s" %(removed_files),
+        "bedtools intersect -a %s -b %s %s > %s"
+        %(refgen_flan_path, bed_file, intersect_options, bed_file + ".annot"),
         shell=True
         )
+    rename_file(bed_file + ".annot", bed_file)
+
+def collapse_bed_file(bed_file: str, collapse_options: str):
+    subprocess.call(
+        "bedtools groupby -i %s %s > %s"
+        %(bed_file, collapse_options, bed_file + ".grouped"),
+        shell=True
+        )
+    rename_file(bed_file + ".grouped", bed_file)

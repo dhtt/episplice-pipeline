@@ -5,6 +5,7 @@ import argparse
 
 import DEU_workflow 
 import DHM_workflow
+import correlate_DEU_DHM
 
 def get_config_section(config_ : configparser.RawConfigParser()):
     if not hasattr(get_config_section, 'section_dict'):
@@ -41,7 +42,7 @@ def run_DEU_workflow():
         '--genome', genome,
         '--refgen_path', refgen_path,
         '--control_id', control_id,
-        '--treatment_id', treatment_id
+        '--treatment_ids', treatment_ids
     ])
 
 
@@ -52,12 +53,24 @@ def run_DHM_workflow():
         '--read2_extension', read2_extension_dhm, 
         '--genome', genome,
         '--control_id', control_id,
-        '--treatment_id', treatment_id,
+        '--treatment_ids', treatment_ids,
         '--antibody', antibody,
         '--replicate_index', replicate_index,
         '--group_name_index', group_name_index,
-        '--chipseq_options', chipseq_options
+        '--chipseq_options', chipseq_options,
+        '--refgen_flank_path', refgen_flank_path
     ])
+
+def get_DEU_DHM_correlation():
+    correlate_DEU_DHM.execute_workflow(args = [
+        '--mrna_seq_path', rnaseq_path,
+        '--chip_seq_path', chipseq_path,
+        '--refgen_path', refgen_path,
+        '--refgen_flank_path', refgen_flank_path,
+        '--control_id', control_id,
+        '--treatment_ids', treatment_ids
+    ])
+
 
 if __name__ == "__main__":
     # Set working directory & parse arguments
@@ -80,7 +93,7 @@ if __name__ == "__main__":
     read2_extension_deu = config_dict['mRNA_seq_CONFIG']['read2_extension']
     refgen_path = config_dict['mRNA_seq_CONFIG']['refgen_path']
     control_id = config_dict['mRNA_seq_CONFIG']['control_id']
-    treatment_id = config_dict['mRNA_seq_CONFIG']['treatment_id']
+    treatment_ids = config_dict['mRNA_seq_CONFIG']['treatment_ids']
     n_cores = config_dict['mRNA_seq_CONFIG']['n_cores']
 
 
@@ -90,6 +103,7 @@ if __name__ == "__main__":
     replicate_index = config_dict['ChIP_seq_CONFIG']['replicate_index']
     group_name_index = config_dict['ChIP_seq_CONFIG']['group_name_index']
     chipseq_options = config_dict['ChIP_seq_CONFIG']['chipseq_options']
+    refgen_flank_path = config_dict['ChIP_seq_CONFIG']['refgen_flank_path']
 
     rnaseq_path = '/'.join([input_path, 'mRNA_seq'])
     chipseq_path = '/'.join([input_path, 'ChIP_seq'])
@@ -102,4 +116,5 @@ if __name__ == "__main__":
         run_DEU_workflow()
     elif run_option == "dhm":
         run_DHM_workflow()
-    
+    elif run_option == "correlation":
+        get_DEU_DHM_correlation()

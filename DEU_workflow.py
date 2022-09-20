@@ -48,7 +48,7 @@ def parse_args(args=None):
     )
     parser.add_argument(
         "-trm", 
-        "--treatment_id", 
+        "--treatment_ids", 
         type=str,
         help="Sample treatment IDs"
     )
@@ -66,7 +66,7 @@ def execute_workflow(args=None):
     genome = args.genome
     refgen_path = args.refgen_path
     control_id = args.control_id
-    treatment_id = args.treatment_id.split(',')
+    treatment_ids = args.treatment_ids.split(',')
 
     # #TEST VALUES
     # mrna_seq_path = '/home/dhthutrang/Krebs/Messier/mRNA_seq'
@@ -74,7 +74,7 @@ def execute_workflow(args=None):
     # read2_extension = '.fastq.gz'
     # genome = 'GRCh38'
     # control_id = 'MCF7_ctrl'
-    # treatment_id = ['MCF7_e2_', 'MCF7_gc10_']
+    # treatment_ids = ['MCF7_e2_', 'MCF7_gc10_']
     # refgen_path = "$ENCODE_REFGEN/reference_genome.2021_.corrected.gtf"
 
     fastq_path = '/'.join([mrna_seq_path, 'fastq_files']) #Files in fastq_path must follow naming format celltype_condition_repx_read.fastq.gz
@@ -84,40 +84,40 @@ def execute_workflow(args=None):
     count_path = '/'.join([mrna_seq_path, 'count_files']) # File name in count_path must be celltype_condition_repx.txt
     DEXSeq_output_path = '/'.join([mrna_seq_path, 'DEXSeq_output'])
     
-    print ("========== Initialized DEU workflow ==========")
-    # Run nf-core/rna_seq
-    print("Create output folder")
-    Path(rnaseq_output).parent.mkdir(parents=True, exist_ok=True)
+    # print ("========== Initialized DEU workflow ==========")
+    # # Run nf-core/rna_seq
+    # print("Create output folder")
+    # Path(rnaseq_output).parent.mkdir(parents=True, exist_ok=True)
 
-    print("Make sample sheet")
-    fastq_dir_to_samplesheet.main(args = [fastq_path, samplesheet_path, 'rnaseq',
-        '--read1_extension', read1_extension, 
-        '--read2_extension', read2_extension])
+    # print("Make sample sheet")
+    # fastq_dir_to_samplesheet.main(args = [fastq_path, samplesheet_path, 'rnaseq',
+    #     '--read1_extension', read1_extension, 
+    #     '--read2_extension', read2_extension])
         
-    print("Run nf-core/rnaseq")
-    subprocess.call(
-        "nextflow run nf-core/rnaseq --input %s --outdir %s --genome %s -profile docker --save_reference true"
-        %(samplesheet_path, rnaseq_output, genome), 
-        shell=True)
+    # print("Run nf-core/rnaseq")
+    # subprocess.call(
+    #     "nextflow run nf-core/rnaseq --input %s --outdir %s --genome %s -profile docker --save_reference true"
+    #     %(samplesheet_path, rnaseq_output, genome), 
+    #     shell=True)
     
-    print("========== Finished nf-core/rnaseq ==========")
+    # print("========== Finished nf-core/rnaseq ==========")
 
-    # Generate exon counts
-    print("Create SAM files folder")
-    Path(sam_path).parent.mkdir(parents=True, exist_ok=True)
+    # # Generate exon counts
+    # print("Create SAM files folder")
+    # Path(sam_path).parent.mkdir(parents=True, exist_ok=True)
 
-    print("Convert BAM to SAM")
-    subprocess.call(
-        "utils/bam2sam.sh -i %s/star_salmon -o %s" 
-        %(rnaseq_output, sam_path),
-        shell=True)
+    # print("Convert BAM to SAM")
+    # subprocess.call(
+    #     "utils/bam2sam.sh -i %s/star_salmon -o %s" 
+    #     %(rnaseq_output, sam_path),
+    #     shell=True)
 
-    print("Generate exon count")
-    Path(count_path).parent.mkdir(parents=True, exist_ok=True)
-    subprocess.call(
-        "DEU_scripts/generate_exon_count.sh -i %s -o %s -g %s" 
-        %(sam_path, count_path, refgen_path),
-        shell=True)
+    # print("Generate exon count")
+    # Path(count_path).parent.mkdir(parents=True, exist_ok=True)
+    # subprocess.call(
+    #     "DEU_scripts/generate_exon_count.sh -i %s -o %s -g %s" 
+    #     %(sam_path, count_path, refgen_path),
+    #     shell=True)
 
     print("========== Generated exon counts ==========")
 
@@ -128,14 +128,14 @@ def execute_workflow(args=None):
         ).parent.mkdir(parents=True, exist_ok=True)
     
     if control_id != "NULL":
-        for trm in treatment_id:
+        for trm in treatment_ids:
             subprocess.call(
                 "Rscript DEU_scripts/DEXSeq_analysis.R -i %s -o %s -a %s -b %s -G %s -n 8" 
                 %(count_path, DEXSeq_output_path, control_id, trm, refgen_path),
                 shell=True)
     else:
-        for trm1 in treatment_id:
-            for trm2 in treatment_id:
+        for trm1 in treatment_ids:
+            for trm2 in treatment_ids:
                 if trm1 != trm2:
                     subprocess.call(
                     "Rscript DEU_scripts/DEXSeq_analysis.R -i %s -o %s -a %s -b %s -G %s -n 8" 
