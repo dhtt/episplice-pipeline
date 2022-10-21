@@ -240,16 +240,15 @@ def execute_workflow(args=None):
     #                     remove_formats="merged,sam")
 
 
-    # Run MAnorm
-    print("RUN MANORM")
-    mkdir_p(manorm_output)
-    for histone_type in histone_types:
-        for treatment_id in treatment_ids:
-            execute_manorm(histone_type, peak_path, alignment_path, control_id, treatment_id, manorm_output)
+    # # Run MAnorm
+    # print("RUN MANORM")
+    # mkdir_p(manorm_output)
+    # for histone_type in histone_types:
+    #     for treatment_id in treatment_ids:
+    #         execute_manorm(histone_type, peak_path, alignment_path, control_id, treatment_id, manorm_output)
 
     # Annotate MAnorm
     mkdir_p(manorm_output_annotated)
-    manorm_results = list()
     for dirpath, dirs, files in os.walk(manorm_output):	 
         for file in files:
             if file.endswith(".xls"):
@@ -259,7 +258,7 @@ def execute_workflow(args=None):
                 df.iloc[:, lambda df:[0, 1, 2, 4, 6, 8, 9]].to_csv(annotated_file_path, sep='\t', header=False, index=False)
 
                 intersect_bed_file(
-                    refgen_flan_path = refgen_flank_path, 
+                    refgen_flank_path = refgen_flank_path, 
                     bed_file = annotated_file_path, 
                     intersect_options = "-wo -loj -bed"
                     )

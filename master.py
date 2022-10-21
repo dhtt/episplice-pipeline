@@ -42,7 +42,8 @@ def run_DEU_workflow():
         '--genome', genome,
         '--refgen_path', refgen_path,
         '--control_id', control_id,
-        '--treatment_ids', treatment_ids
+        '--treatment_ids', treatment_ids,
+        '--mrnaseq_options', mrnaseq_options
     ])
 
 
@@ -95,6 +96,7 @@ if __name__ == "__main__":
     control_id = config_dict['mRNA_seq_CONFIG']['control_id']
     treatment_ids = config_dict['mRNA_seq_CONFIG']['treatment_ids']
     n_cores = config_dict['mRNA_seq_CONFIG']['n_cores']
+    mrnaseq_options = config_dict['mRNA_seq_CONFIG']['mrnaseq_options']
 
 
     read1_extension_dhm = config_dict['ChIP_seq_CONFIG']['read1_extension']

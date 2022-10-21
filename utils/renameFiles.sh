@@ -1,3 +1,5 @@
+# dir is the path to fastq_files folder
+# metadata is the path to metadata.tsv file. Modify the last column of metadata.tsv to the new name
 while getopts 'd:m:' flag
 do 
     case "${flag}" in 

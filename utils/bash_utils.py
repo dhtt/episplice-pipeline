@@ -84,10 +84,10 @@ def execute_manorm(histone_type, peak_dir, read_dir, control_id, treatment_id, m
         print("An exception occured while running MAnorm")
         pass
 
-def intersect_bed_file(refgen_flan_path: str, bed_file: str, intersect_options: str):
+def intersect_bed_file(refgen_flank_path: str, bed_file: str, intersect_options: str):
     subprocess.call(
         "bedtools intersect -a %s -b %s %s > %s"
-        %(refgen_flan_path, bed_file, intersect_options, bed_file + ".annot"),
+        %(refgen_flank_path, bed_file, intersect_options, bed_file + ".annot"),
         shell=True
         )
     rename_file(bed_file + ".annot", bed_file)
