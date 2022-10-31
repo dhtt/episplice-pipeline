@@ -31,7 +31,7 @@ option_list <- list(
 
 opt_parser <- OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
-DEU_file <- "/home/dhthutrang/Krebs/Reddy/data/mRNA_seq/dexseq_output_annotated"
+DEU_file <- opt$DEU_file
 DHM_file <- opt$DHM_file
 output_path <- opt$output_path
 histone_type_list <- strsplit(opt$histone_types, "_", fixed = T)[[1]]
@@ -58,33 +58,44 @@ get_colname <- function(filename_list, option = "his") {
 
 # ===== PREPARE EXP FILE (1 FOR ALL HIS TYPES) =====
 print("===== PREPARE EXP FILE (1 FOR ALL HIS TYPES) =====")
-all_pairs.exp <- list.files(DEU_file, full.names = TRUE, pattern = "grouped.bed")
+all_pairs.exp <- list.files(DEU_file, full.names = TRUE, pattern = "res.csv")
 print(all_pairs.exp)
 get_all_pairs.exp <- function(all_pairs.exp) {
-  pair.exp <- fread(all_pairs.exp[[1]])
-  id <- as.data.frame(do.call(rbind, lapply(pair.exp$V9, function(x) strsplit(x, split = '"', fixed = T)[[1]][c(2, 6)])))
-  colnames(id) <- c("gene", "exon")
-  pair.exp <- pair.exp %>%
-    dplyr::mutate(
-      gene_id = id$gene, exon_id = id$exon,
-      MCF7_DMSO_MCF7_50nM = V10
-    ) %>%
-    select(gene_id, exon_id, MCF7_DMSO_MCF7_50nM) %>%
-    dplyr::na_if(., -Inf) %>%
-    dplyr::na_if(., Inf)
-    
-  print(dim(pair.exp))
-  print(head(pair.exp, 10))
-  # saveRDS(pair.his_list, paste('pair.his_list_', his, '.RDS', sep=''))
-  return(pair.exp)
+  colname_exp <- c("gene_id", "exon_id", get_colname(all_pairs.exp, "exp"))
+  pair.exp_list <- vector("list", length(all_pairs.exp))
+
+  for (i in 1:length(all_pairs.exp)) {
+    print(paste("Pair: ", i, sep = ""))
+    pair.exp <- all_pairs.exp[[i]]
+    exp_file =  fread(pair.exp)
+    pair.exp_list[[i]] <- exp_file[, c("stat", "padj")]
+    if (i == 1){
+      fwrite(exp_file[, 1:2], "/home/dhthutrang/ENCODE/utilities/exp_id.2022.txt", sep = '\t', col.names = FALSE)
+    }
+  }
+
+  pair.exp_list <- lapply(pair.exp_list, function(x) {
+    x <- x %>%
+      mutate(exp = dplyr::if_else(padj <= 0.05 & !is.na(padj), true = stat, false = 0.0)) %>%
+      dplyr::select(exp)
+  })
+
+  pair.exp_list <- as.data.frame(pair.exp_list)
+  #"/home/dhthutrang/ENCODE/utilities/exp_id.2021_.txt"  length 262112 
+  exp_id <- fread("/home/dhthutrang/ENCODE/utilities/exp_id.2022.txt", sep = "\t", quote = FALSE, header = FALSE)
+  print(paste("CHECK length: ", dim(exp_id), dim(pair.exp_list), sep = "__"))
+  pair.exp_list <- as.data.frame(cbind(exp_id, pair.exp_list))
+  pair.exp_list <- pair.exp_list[order(pair.exp_list$V1), ]
+  colnames(pair.exp_list) <- colname_exp
+  return(as.data.table(pair.exp_list))
 }
 
-all_pairs.exp <- get_all_pairs.exp(all_pairs.exp)
-saveRDS(all_pairs.exp, "all_pairs.exp.RDS")
+# all_pairs.exp <- get_all_pairs.exp(all_pairs.exp)
+# saveRDS(all_pairs.exp, "all_pairs.exp.RDS")
 all_pairs.exp <- readRDS("all_pairs.exp.RDS")
 head(all_pairs.exp)
 
-# # ===== PREPARE HIS FILE (6 TOTAL) =====
+# ===== PREPARE HIS FILE (6 TOTAL) =====
 print("===== PREPARE HIS FILE (6 TOTAL) =====")
 # his_id = read.csv("flank_id.2021.txt", sep='\t', header = FALSE)
 get_all_pairs.his <- function(all_pairs.his, his) {
@@ -104,9 +115,13 @@ get_all_pairs.his <- function(all_pairs.his, his) {
           true = abs(as.numeric(as.character(V10))), false = 0
         )
       ) %>%
+      filter(type == "exonic_part") %>%
       dplyr::select(gene, exon, m_val) %>%
+      dplyr::group_by(gene, exon) %>%
+      dplyr::summarise_all(max, na.rm = T) %>%
       dplyr::na_if(., -Inf) %>%
-      dplyr::na_if(., Inf)
+      dplyr::na_if(., Inf) %>%
+      dplyr::ungroup()
     if (i == 1) pair.his_id <- pair.his[, c("gene", "exon")]
     pair.his <- pair.his %>% dplyr::select(-gene, -exon)
     pair.his_list[[i]] <- pair.his
@@ -244,11 +259,11 @@ saveRDS(all_res_list.pearcor_r, "all_res_list.pearcor_r.RDS")
 head(r_val[[1]][order(r_val[[1]][2]),])
 
 r_val = readRDS("/home/dhthutrang/Krebs/Reddy/data/cor_analysis/all_res_list.pearcor_r.RDS")
-r_val = lapply(r_val, function(x) x[!is.na(x[[2]]) & abs(x[[2]]) > 0.3,])
+r_val = lapply(r_val, function(x) x[!is.na(x[[2]]) & abs(x[[2]]) > 0.5 ,])
 r_val = Reduce(union, r_val)
 r_val
 p_val = readRDS("/home/dhthutrang/Krebs/Reddy/data/cor_analysis/all_res_list.pearcor_p.RDS")
-p_val = lapply(p_val, function(x) x[!is.na(x[[2]]) & x[[2]] <= 0.05, ]) # nolint
+p_val = lapply(p_val, function(x) x[!is.na(x[[2]]) & x[[2]] <= 0.05, ])
 p_val = Reduce(union, p_val)
 p_val
 temp = intersect(p_val, r_val)
