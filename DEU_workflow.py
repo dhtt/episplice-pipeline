@@ -96,21 +96,21 @@ def execute_workflow(args=None):
     dexseq_output_annotated = '/'.join([mrna_seq_path, 'dexseq_output_annotated'])
     
     print ("========== Initialized DEU workflow ==========")
-    # Run nf-core/rna_seq
-    print("Create output folder")
-    Path(rnaseq_output).parent.mkdir(parents=True, exist_ok=True)
+    # # Run nf-core/rna_seq
+    # print("Create output folder")
+    # Path(rnaseq_output).parent.mkdir(parents=True, exist_ok=True)
 
-    print("Make sample sheet")
-    fastq_dir_to_samplesheet.main(args = [fastq_path, samplesheet_path, 'rnaseq',
-        '--read1_extension', read1_extension, 
-        '--read2_extension', read2_extension])
+    # print("Make sample sheet")
+    # fastq_dir_to_samplesheet.main(args = [fastq_path, samplesheet_path, 'rnaseq',
+    #     '--read1_extension', read1_extension, 
+    #     '--read2_extension', read2_extension])
         
-    print("Run nf-core/rnaseq")
-    subprocess.call(
-        "nextflow run nf-core/rnaseq --input %s --outdir %s --genome %s -profile docker --save_reference true"
-        %(samplesheet_path, rnaseq_output, genome) +
-        " " + mrnaseq_options,
-        shell=True)
+    # print("Run nf-core/rnaseq")
+    # subprocess.call(
+    #     "nextflow run nf-core/rnaseq --input %s --outdir %s --genome %s -profile docker --save_reference true"
+    #     %(samplesheet_path, rnaseq_output, genome) +
+    #     " " + mrnaseq_options,
+    #     shell=True)
     
     # print("========== Finished nf-core/rnaseq ==========")
 
@@ -124,34 +124,34 @@ def execute_workflow(args=None):
     #     %(rnaseq_output, sam_path),
     #     shell=True)
 
-    # print("Generate exon count")
-    # Path(count_path).mkdir(parents=True, exist_ok=True)
-    # subprocess.call(
-    #     "DEU_scripts/generate_exon_count.sh -i %s -o %s -g %s" 
-    #     %(sam_path, count_path, refgen_path),
-    #     shell=True)
+    print("Generate exon count")
+    Path(count_path).mkdir(parents=True, exist_ok=True)
+    subprocess.call(
+        "DEU_scripts/generate_exon_count.sh -i %s -o %s -g %s" 
+        %(sam_path, count_path, refgen_path),
+        shell=True)
 
     print("========== Generated exon counts ==========")
 
     # DEXSeq run
-    # print("Start DEXseq analysis")
-    # for extension in ["", "csv", "html", "r_data", "plot"]:
-    #     Path('/'.join([DEXSeq_output_path, extension])).mkdir(parents=True, exist_ok=True)
+    print("Start DEXseq analysis")
+    for extension in ["", "csv", "html", "r_data", "plot"]:
+        Path('/'.join([DEXSeq_output_path, extension])).mkdir(parents=True, exist_ok=True)
     
-    # if control_id != "NULL":
-    #     for trm in treatment_ids:
-    #         subprocess.call(
-    #             "Rscript DEU_scripts/DEXSeq_analysis.R -i %s -o %s -a %s -b %s -G %s -n 8" 
-    #             %(count_path, DEXSeq_output_path, control_id, trm, refgen_path),
-    #             shell=True)
-    # else:
-    #     for trm1 in treatment_ids:
-    #         for trm2 in treatment_ids:
-    #             if trm1 != trm2:
-    #                 subprocess.call(
-    #                 "Rscript DEU_scripts/DEXSeq_analysis.R -i %s -o %s -a %s -b %s -G %s -n 8" 
-    #                 %(count_path, DEXSeq_output_path, trm1, trm2, refgen_path),
-    #                 shell=True) #TODO: parallel run
+    if control_id != "NULL":
+        for trm in treatment_ids:
+            subprocess.call(
+                "Rscript DEU_scripts/DEXSeq_analysis.R -i %s -o %s -a %s -b %s -G %s -n 8" 
+                %(count_path, DEXSeq_output_path, control_id, trm, refgen_path),
+                shell=True)
+    else:
+        for trm1 in treatment_ids:
+            for trm2 in treatment_ids:
+                if trm1 != trm2:
+                    subprocess.call(
+                    "Rscript DEU_scripts/DEXSeq_analysis.R -i %s -o %s -a %s -b %s -G %s -n 8" 
+                    %(count_path, DEXSeq_output_path, trm1, trm2, refgen_path),
+                    shell=True) #TODO: parallel run
                     
     # mkdir_p(dexseq_output_annotated)
     # for dirpath, dirs, files in os.walk('/'.join([DEXSeq_output_path, 'csv'])):	 
