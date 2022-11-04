@@ -124,12 +124,12 @@ def execute_workflow(args=None):
     #     %(rnaseq_output, sam_path),
     #     shell=True)
 
-    print("Generate exon count")
-    Path(count_path).mkdir(parents=True, exist_ok=True)
-    subprocess.call(
-        "DEU_scripts/generate_exon_count.sh -i %s -o %s -g %s" 
-        %(sam_path, count_path, refgen_path),
-        shell=True)
+    # print("Generate exon count")
+    # Path(count_path).mkdir(parents=True, exist_ok=True)
+    # subprocess.call(
+    #     "DEU_scripts/generate_exon_count.sh -i %s -o %s -g %s" 
+    #     %(sam_path, count_path, refgen_path),
+    #     shell=True)
 
     print("========== Generated exon counts ==========")
 
