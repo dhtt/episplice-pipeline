@@ -2,6 +2,7 @@ import os
 from collections import defaultdict
 import argparse
 import re 
+import itertools
 import numpy as np
 from matplotlib import pyplot as plt
 from statsmodels.tsa.stattools import acf
@@ -67,6 +68,7 @@ def safe_acf(mvals_array: np.array):
 def compute_acf_parallel(exon_count: str, info: list, acfs_list, genes_list):
     try: 
         gene_ids = [x[0] for x in info]
+        genes_list[exon_count] = gene_ids
         acf_res = np.asarray([safe_acf(x[1]) for x in info])
         if acf_res.shape[0] > 1:
             acf_res = acf_res[~np.isnan(acf_res).any(axis=1)]
@@ -78,14 +80,12 @@ def compute_acf_parallel(exon_count: str, info: list, acfs_list, genes_list):
     except ValueError:
         print("An error occured for exon length: " + str(exon_count))
     acfs_list.append(acf_res)
-    genes_list.append(gene_ids)
 
 def get_average_acf(parsed_mvals_dict: dict):
-    genes_by_exon_dict = dict()
     acfs, genes = [], []
     with Manager() as manager:
         acfs_list = manager.list()
-        genes_list = manager.list()
+        genes_list = manager.dict()
         processes = []
         for exon_count, info in parsed_mvals_dict.items():
             p = Process(target=compute_acf_parallel, args=(exon_count, info, acfs_list, genes_list))
@@ -94,7 +94,7 @@ def get_average_acf(parsed_mvals_dict: dict):
         for p in processes:
             p.join()
         acfs = list(acfs_list)
-        genes = list(genes_list)
+        genes = dict(genes_list)
         
     #Sort by exon counts and add padding
     acfs = sorted(acfs, key=len)
@@ -103,9 +103,8 @@ def get_average_acf(parsed_mvals_dict: dict):
     acfs = pd.DataFrame(acfs, index=sorted(parsed_mvals_dict.keys())).T
     return (genes, acfs)
 
-def visualize_acf(acfs_by_exon: pd.DataFrame):
-        acfs_by_exon_long = acfs_by_exon.reset_index().melt(id_vars='index', var_name='exon_length', value_name='coef')
-        n_distinct_exons = acfs_by_exon_long['exon_length'].nunique()
+def visualize_acf(acfs_by_exon_df: pd.DataFrame):
+        acfs_by_exon_long = acfs_by_exon_df.reset_index().melt(id_vars='index', var_name='exon_length', value_name='coef')
         
         sns.set_theme(style="white")
         fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(14, 10)) 
@@ -120,8 +119,8 @@ def visualize_acf(acfs_by_exon: pd.DataFrame):
             
             plot = sns.lineplot(ax=ax,
                 data=plot_df, x='index', y='coef', hue='exon_length',
-                palette=sns.color_palette("mako_r", plot_df['exon_length'].nunique()),
-                marker='o', legend=False, markersize=5, alpha=0.4)
+                palette=sns.color_palette("mako", plot_df['exon_length'].nunique()),
+                legend=False, alpha=0.4)
             plot.axhline(0, ls='--', color='red')
             
             
@@ -132,9 +131,15 @@ def visualize_acf(acfs_by_exon: pd.DataFrame):
         fig.savefig(file + '_autocor.png', dpi=300)
         plt.clf()
         plt.close(fig)  
-        
-        print("Ended: " + datetime.now().strftime("%H:%M:%S"))  
-    
+
+def plot_hist_exon_count(freq_list: list):
+    fig, ax = plt.subplots(nrows=1, ncols=1) 
+    sns.histplot(data=freq_list, ax=ax, palette=sns.color_palette("mako", 1))
+    ax.set(xticks=np.arange(1, max(freq_list), 150))
+    fig.savefig(file + '_exondist.png', dpi=300)
+    plt.clf()
+    plt.close(fig)  
+
 
     
 if __name__ == "__main__":
@@ -151,14 +156,11 @@ if __name__ == "__main__":
         files = [os.path.join(bed_path, f) for f in os.listdir(bed_path) if f.endswith('bed')]
         for file in files:
             print("Started " + file + " at: " + datetime.now().strftime("%H:%M:%S"))  
-            genewise_mval = parse_bed(file)
+            # genewise_mval = parse_bed(file)
     
-            acfs_by_exon = get_average_acf(genewise_mval)
-            genes_by_exon = acfs_by_exon[0]
-            acfs_by_exon = acfs_by_exon[1]
-            
-            print(genes_by_exon)
-            print(acfs_by_exon)
+            # acfs_by_exon = get_average_acf(genewise_mval)
+            # genes_by_exon = acfs_by_exon[0]
+            # acfs_by_exon = acfs_by_exon[1]
             
             # if len(genes_by_exon) > 1:
             #     with open(file + '_genes.pkl', 'wb') as f:
@@ -166,11 +168,16 @@ if __name__ == "__main__":
             #     with open(file + '_acfs.pkl', 'wb') as f:
             #         pickle.dump(acfs_by_exon, f)
             
-            # acfs_by_exon = pickle.load(open(file + '_acfs.pkl', 'rb'))
+            acfs_by_exon = pickle.load(open(file + '_acfs.pkl', 'rb'))
             # print(np.amax(acfs_by_exon[0:10], axis=1))
             # print(np.mean(acfs_by_exon[0:10], axis=1))
-            # visualize_acf(acfs_by_exon)
+            visualize_acf(acfs_by_exon)
             
-            # genes_by_exon = pickle.load(open(file + '_genes.pkl', 'rb'))
-            # freq = [len(i) for i in genes_by_exon]
-            # print(freq[0:10])
+            genes_by_exon = pickle.load(open(file + '_genes.pkl', 'rb'))
+            freq = [[k]*len(v) for k, v in genes_by_exon.items()]
+            freq = list(itertools.chain(*freq))
+            plot_hist_exon_count(freq)
+            
+            
+            
+    print("Ended: " + datetime.now().strftime("%H:%M:%S"))  
