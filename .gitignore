@@ -188,3 +188,5 @@ results
 DEU_scripts/temp.R
 *_log*
 *.gtf
+*.txt
+*.tiff
