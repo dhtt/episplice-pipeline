@@ -1,3 +1,4 @@
+#FIRST ACTIVATE PYTHON 3.9 ENV source /home/dhthutrang/python3.9/bin/activate
 import os
 from collections import defaultdict
 import argparse
@@ -156,21 +157,21 @@ if __name__ == "__main__":
         files = [os.path.join(bed_path, f) for f in os.listdir(bed_path) if f.endswith('bed')]
         for file in files:
             print("Started " + file + " at: " + datetime.now().strftime("%H:%M:%S"))  
-            # genewise_mval = parse_bed(file)
+            genewise_mval = parse_bed(file)
     
-            # acfs_by_exon = get_average_acf(genewise_mval)
-            # genes_by_exon = acfs_by_exon[0]
-            # acfs_by_exon = acfs_by_exon[1]
+            acfs_by_exon = get_average_acf(genewise_mval)
+            genes_by_exon = acfs_by_exon[0]
+            acfs_by_exon = acfs_by_exon[1]
             
-            # if len(genes_by_exon) > 1:
-            #     with open(file + '_genes.pkl', 'wb') as f:
-            #         pickle.dump(genes_by_exon, f)
-            #     with open(file + '_acfs.pkl', 'wb') as f:
-            #         pickle.dump(acfs_by_exon, f)
+            if len(genes_by_exon) > 1:
+                with open(file + '_genes.pkl', 'wb') as f:
+                    pickle.dump(genes_by_exon, f)
+                with open(file + '_acfs.pkl', 'wb') as f:
+                    pickle.dump(acfs_by_exon, f)
             
             acfs_by_exon = pickle.load(open(file + '_acfs.pkl', 'rb'))
-            # print(np.amax(acfs_by_exon[0:10], axis=1))
-            # print(np.mean(acfs_by_exon[0:10], axis=1))
+            print(np.amax(acfs_by_exon[0:10], axis=1))
+            print(np.mean(acfs_by_exon[0:10], axis=1))
             visualize_acf(acfs_by_exon)
             
             genes_by_exon = pickle.load(open(file + '_genes.pkl', 'rb'))

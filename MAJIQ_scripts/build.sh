@@ -22,7 +22,9 @@ refgen_path=/home/dhthutrang/ENCODE/refgen/majiq/hg38.ncbiRefSeq.gtf
 build_result=$sample_path/build_result
 
 echo 'PATH TO SAMPLES: '$sample_path
-mkdir -p $bamdirs
+# echo 'CHANGE SAMPLES NAME'
+# /home/dhthutrang/episplice-pipeline/MAJIQ_scripts/renameFiles.majiq.sh -b $bamdirs -p $group_ids
+
 IFS='_' read -r -a array <<< "$group_ids"
 
 
@@ -57,11 +59,14 @@ do
     echo 'PSI for '${treatment} 
     majiq psi -o $psi_path -n $treatment $majiq_files_treatment --output-type all
 
-    if (( "${#array[@]}" < 2 ))
+    if (( "${#array[@]}" > 1 ))
     then
+        echo "check1"
         if [ $index != 0 ]
         then
+            echo "check2"
             control=${array[0]}
+            echo $control
             majiq_files_control=${control}*.majiq
             echo "----------------------------------"
             echo 'dPSI for '${control} ${treatment} 
