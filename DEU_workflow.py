@@ -6,7 +6,7 @@ from pathlib import Path
 from utils.bash_utils import *
 import pandas as pd
 
-sys.path.append("/home/dhthutrang/Krebs/episplice-pipeline/utils")
+sys.path.append("/home/dhthutrang/episplice-pipeline/utils")
 import fastq_dir_to_samplesheet #noLint
 
 
@@ -96,40 +96,40 @@ def execute_workflow(args=None):
     dexseq_output_annotated = '/'.join([mrna_seq_path, 'dexseq_output_annotated'])
     
     print ("========== Initialized DEU workflow ==========")
-    # # Run nf-core/rna_seq
-    # print("Create output folder")
-    # Path(rnaseq_output).parent.mkdir(parents=True, exist_ok=True)
+    # Run nf-core/rna_seq
+    print("Create output folder")
+    Path(rnaseq_output).parent.mkdir(parents=True, exist_ok=True)
 
-    # print("Make sample sheet")
-    # fastq_dir_to_samplesheet.main(args = [fastq_path, samplesheet_path, 'rnaseq',
-    #     '--read1_extension', read1_extension, 
-    #     '--read2_extension', read2_extension])
+    print("Make sample sheet")
+    fastq_dir_to_samplesheet.main(args = [fastq_path, samplesheet_path, 'rnaseq',
+        '--read1_extension', read1_extension, 
+        '--read2_extension', read2_extension])
         
-    # print("Run nf-core/rnaseq")
-    # subprocess.call(
-    #     "nextflow run nf-core/rnaseq --input %s --outdir %s --genome %s -profile docker --save_reference true"
-    #     %(samplesheet_path, rnaseq_output, genome) +
-    #     " " + mrnaseq_options,
-    #     shell=True)
+    print("Run nf-core/rnaseq")
+    subprocess.call(
+        "nextflow run nf-core/rnaseq --input %s --outdir %s --genome %s -profile docker --save_reference true"
+        %(samplesheet_path, rnaseq_output, genome) +
+        " " + mrnaseq_options,
+        shell=True)
     
-    # print("========== Finished nf-core/rnaseq ==========")
+    print("========== Finished nf-core/rnaseq ==========")
 
-    # # Generate exon counts
-    # print("Create SAM files folder")
-    # Path(sam_path).parent.mkdir(parents=True, exist_ok=True)
+    # Generate exon counts
+    print("Create SAM files folder")
+    Path(sam_path).parent.mkdir(parents=True, exist_ok=True)
 
-    # print("Convert BAM to SAM")
-    # subprocess.call(
-    #     "utils/bam2sam.sh -i %s/star_salmon -o %s" 
-    #     %(rnaseq_output, sam_path),
-    #     shell=True)
+    print("Convert BAM to SAM")
+    subprocess.call(
+        "utils/bam2sam.sh -i %s/star_salmon -o %s" 
+        %(rnaseq_output, sam_path),
+        shell=True)
 
-    # print("Generate exon count")
-    # Path(count_path).mkdir(parents=True, exist_ok=True)
-    # subprocess.call(
-    #     "DEU_scripts/generate_exon_count.sh -i %s -o %s -g %s" 
-    #     %(sam_path, count_path, refgen_path),
-    #     shell=True)
+    print("Generate exon count")
+    Path(count_path).mkdir(parents=True, exist_ok=True)
+    subprocess.call(
+        "DEU_scripts/generate_exon_count.sh -i %s -o %s -g %s" 
+        %(sam_path, count_path, refgen_path),
+        shell=True)
 
     print("========== Generated exon counts ==========")
 
@@ -153,24 +153,24 @@ def execute_workflow(args=None):
                     %(count_path, DEXSeq_output_path, trm1, trm2, refgen_path),
                     shell=True) #TODO: parallel run
                     
-    # mkdir_p(dexseq_output_annotated)
-    # for dirpath, dirs, files in os.walk('/'.join([DEXSeq_output_path, 'csv'])):	 
-    #     for file in files:
-    #         if file.endswith(".csv"):
-    #             file_path = dirpath + "/" + file
-    #             annotated_file_path = join(dexseq_output_annotated, '_'.join(file.split('_')[:-1]) + ".bed")
-    #             df = pd.read_csv(file_path, sep='\t', header=0)
-    #             df.iloc[:, lambda df:[0, 1, 2, 4, 6, 8, 9]].to_csv(annotated_file_path, sep='\t', header=False, index=False)
+    mkdir_p(dexseq_output_annotated)
+    for dirpath, dirs, files in os.walk('/'.join([DEXSeq_output_path, 'csv'])):	 
+        for file in files:
+            if file.endswith(".csv"):
+                file_path = dirpath + "/" + file
+                annotated_file_path = join(dexseq_output_annotated, '_'.join(file.split('_')[:-1]) + ".bed")
+                df = pd.read_csv(file_path, sep='\t', header=0)
+                df.iloc[:, lambda df:[0, 1, 2, 4, 6, 8, 9]].to_csv(annotated_file_path, sep='\t', header=False, index=False)
 
-    #             intersect_bed_file(
-    #                 refgen_flank_path = refgen_flank_path, 
-    #                 bed_file = annotated_file_path, 
-    #                 intersect_options = "-wo -loj -bed"
-    #                 )
-    #             collapse_bed_file(
-    #                 bed_file=annotated_file_path,
-    #                 collapse_options="-g 1-9 -c 13,14 -o max"
-    #                 )
+                intersect_bed_file(
+                    refgen_flank_path = refgen_flank_path, 
+                    bed_file = annotated_file_path, 
+                    intersect_options = "-wo -loj -bed"
+                    )
+                collapse_bed_file(
+                    bed_file=annotated_file_path,
+                    collapse_options="-g 1-9 -c 13,14 -o max"
+                    )
     print("========== Finished DEXseq analysis ==========")
 
 

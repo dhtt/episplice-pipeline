@@ -75,7 +75,7 @@ def get_DEU_DHM_correlation():
 
 if __name__ == "__main__":
     # Set working directory & parse arguments
-    os.chdir('/home/dhthutrang/Krebs/episplice-pipeline')
+    os.chdir('/home/dhthutrang/episplice-pipeline')
     args = parse_args(args=None)
     config_path = args.config_path
     run_option = args.run_option
